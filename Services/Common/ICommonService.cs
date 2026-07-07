@@ -8,13 +8,17 @@ namespace HulasApplication.Services.Common
 	public interface ICommonService
 	{
 		Task<Insurers> GetInsurers(int Id);
-		Task<int> InsertCommonPolicyDetails(HulasCommonPolicyDetails commonPolicyDetails);
-		Task<int> InsertKYCDetails(HulasKYCDetails kycDetails);
-		Task<bool> InsertPhoto(List<HulasPhoto> photos);
-		Task<int> InsertPremiumDetail(HulasPremiumDetail premiumDetail);
-		Task<int> InsertMotorDetails(HulasMotorDetails motorDetails);
-		Task<bool> InsertProductAttachment(List<HulasProductAttachment> productAttachments);
+		Task<int> InsertCommonPolicyDetails(CommonPolicyDetails commonPolicyDetails);
+		Task<int> InsertKYCDetails(KycDetail kycDetails);
+		Task<bool> InsertPhoto(List<KycPhoto> photos);
+		Task<int> InsertPremiumDetail(PremiumDetails premiumDetail);
+		Task<int> InsertMotorDetails(MotorDetails motorDetails);
+		Task<bool> InsertProductAttachment(List<ProductAttachment> productAttachments);
+		Task<int> InsertMotorProforma(OutputObject1 apiResponse, SaveMotorProforma model,int kycDetailsId);
+		Task<int> InsertFailedMotorProforma(SaveMotorProforma model, string failureReason);
 
 
-	}
+
+
+    }
 }

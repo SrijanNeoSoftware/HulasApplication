@@ -1,17 +1,20 @@
-﻿using HulasApplication.Model.MotorApi;
+﻿using HulasApplication.Common;
+using HulasApplication.Model.Mobile.ResponseModel;
+using HulasApplication.Model.MotorApi;
 using HulasApplication.Services.Common;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using HulasApplication.Common;
-using HulasApplication.Model.Mobile.ResponseModel;
+using System.Transactions;
 
 namespace HulasApplication.Controllers.Api
 {
@@ -87,8 +90,29 @@ namespace HulasApplication.Controllers.Api
 			}
 		}
 
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Route("getMerchantBalance")]
+        public async Task<IActionResult> GetMerchantBalance()
+        {
+            try
+            {
+                var insurerId = 2;
+                var data = await _commonService.GetInsurers(insurerId);
+                int merchantPaymentId = _config.GetValue<int>("NLGApiURL:MerchantId");
 
-		[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+                var response = await httpapi.GetMerchantBalance("/api/Utility/GetMerchantAccountBalance", data, merchantPaymentId);
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = 0, message = ex.Message });
+            }
+        }
+
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 		[Microsoft.AspNetCore.Mvc.HttpPost]
 		[Route("getQuote")]
 		public async Task<IActionResult> GetQuote([FromBody] VehicleInfo model)
@@ -106,6 +130,7 @@ namespace HulasApplication.Controllers.Api
 				return Ok(new { success = 0, message = ex.Message });
 			}
 		}
+
 		[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 		[Microsoft.AspNetCore.Mvc.HttpPost]
 		[Route("getClass")]
@@ -215,19 +240,19 @@ namespace HulasApplication.Controllers.Api
 				var Sectoken = new JwtSecurityToken(_config["Jwt:Issuer"],
 				  _config["Jwt:Issuer"],
 				  null,
-				  expires: DateTime.Now.AddMinutes(10),
+				  expires: DateTime.Now.AddMinutes(30),
 				  signingCredentials: credentials);
 
 				var token = new JwtSecurityTokenHandler().WriteToken(Sectoken);
 
-				return Ok(new { tokenString = token, ExpiryTime = "10 min" });
+				return Ok(new { tokenString = token, ExpiryTime = "30 min" });
 			}
 			else
 			{
 				return BadRequest();
 			}
 		}
-		[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        /*[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 		[HttpPost]
 		[Route("PostMotor")]
 		public async Task<IActionResult> PostMotorProforma([FromBody] HulasPolicy model)
@@ -313,9 +338,101 @@ namespace HulasApplication.Controllers.Api
 			{
 				return Ok(new { responseCode = "1", responseMessage = ex.Message });
 			}
-		}
+		}*/
 
-		public class TokenRequestModel
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost]
+        [Route("PostMotor")]
+        public async Task<IActionResult> PostMotor([FromBody] SaveMotorProforma model)
+        {
+            try
+            {
+                var kycDetailsId = await _commonService.InsertKYCDetails(model.kycDetails);
+
+                model.MotorDetails.KycId = kycDetailsId;
+                model.PremiumDetails.KycId = kycDetailsId;
+                model.CommonPolicyDetails.KycId = kycDetailsId;
+
+                if (model.kycDetails.Photos != null)
+                {
+                    foreach (var photo in model.kycDetails.Photos)
+                        photo.KycId = kycDetailsId;
+                }
+
+                if (model.MotorDetails.ProductAttachments != null)
+                {
+                    foreach (var attachment in model.MotorDetails.ProductAttachments)
+                        attachment.KycId = kycDetailsId;
+                }
+
+                await _commonService.InsertCommonPolicyDetails(model.CommonPolicyDetails);
+
+                if (model.kycDetails.Photos?.Any() == true)
+                    await _commonService.InsertPhoto(model.kycDetails.Photos);
+
+                await _commonService.InsertMotorDetails(model.MotorDetails);
+                await _commonService.InsertPremiumDetail(model.PremiumDetails);
+
+                if (model.MotorDetails.ProductAttachments?.Any() == true)
+                    await _commonService.InsertProductAttachment(model.MotorDetails.ProductAttachments);
+
+                var insurerId = 2;
+                var insurer = await _commonService.GetInsurers(insurerId);
+
+                var response = await httpapi.PostMotorProforma(
+                    "/API/Motor/SaveMotorProforma",
+                    insurer,
+                    model);
+
+                if (response?.Data?.Output?.Flag?.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    await _commonService.InsertMotorProforma(
+                        response.Data.Output,
+                        model,
+                        kycDetailsId);
+                }
+                else
+                {
+                    await _commonService.InsertFailedMotorProforma(
+                        model,
+                        response?.Data?.Output?.SuccFailMsg ?? "Unknown error from insurer API");
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                await _commonService.InsertFailedMotorProforma(
+                    model,
+                    ex.Message);
+
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    success = 0,
+                    message = ex.Message
+                });
+            }
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Route("previewPolicy")]
+        public async Task<IActionResult> PreviewPolicy([FromBody] PreviewPolicyRequest model)
+        {
+            try
+            {
+                var insurerId = 2;
+                var data = await _commonService.GetInsurers(insurerId);
+                var preview = await httpapi.PreviewPolicyAsync("/api/Reports/PreviewPolicy", data, model.acceptanceNo);
+
+                return Ok(preview);
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = 0, message = ex.Message });
+            }
+        }
+        public class TokenRequestModel
 		{
 			public string Token { get; set; }
 		}

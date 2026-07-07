@@ -659,4 +659,246 @@ namespace HulasApplication.Model.MotorApi
 		public int districtId { get; set; }
 	}
 
+
+    public class KycDetail
+    {
+        public int Id { get; set; }
+        public int KycId { get; set; }
+        public string UserId { get; set; }
+        public int InsuredType { get; set; }
+        public string Name { get; set; }
+        public string NameNepali { get; set; }
+        public string InsuredTypeName { get; set; }
+        public int DistrictId { get; set; }
+        public string DistrictName { get; set; }
+        public int ProvinceId { get; set; }
+        public string ProvinceName { get; set; }
+        public string MunicipalityCode { get; set; }
+        public string Municipality { get; set; }
+        public int WardNo { get; set; }
+        public string HouseNo { get; set; }
+        public string CurrentAddress { get; set; }
+        public string AddressNepali { get; set; }
+        public string MobileNo { get; set; }
+        public string Email { get; set; }
+        public string Occupation { get; set; }
+        public string OccupationName { get; set; }
+        public string IncomeSource { get; set; }
+        public string PanNo { get; set; }
+        public string FatherName { get; set; }
+        public string FatherNameNep { get; set; }
+        public string GrandFatherName { get; set; }
+        public string GrandFatherNameNep { get; set; }
+        public string MotherName { get; set; }
+        public string MotherNameNep { get; set; }
+        public string GrandMotherName { get; set; }
+        public string SpouseName { get; set; }
+        public string DateOfBirth { get; set; }
+        public string CitizenshipNo { get; set; }
+        public string IssueDate { get; set; }
+        public int IssueDistrictID { get; set; }
+        public string IssueDistrict { get; set; }
+        public string Gender { get; set; }
+        public string GenderName { get; set; }
+        public string MaritalStatus { get; set; }
+        public string MaritalStatusName { get; set; }
+        public int KycRiskCategory { get; set; }
+        public int KycClassification { get; set; }
+        public string FileName { get; set; }
+        public List<KycPhoto> Photos { get; set; }
+        public string FAMILY_TYPE { get; set; }
+        public string BuyerId { get; set; }
+        public string Nominee { get; set; }
+        public string NomineeRelation { get; set; }
+
+
+    }
+
+    public class KycPhoto
+    {
+        public int Id { get; set; }
+        public int KycId { get; set; }
+        public string FileName { get; set; }
+        public string KycImage { get; set; }
+        public string? FileUrl { get; set; }
+    }
+    public class CommonPolicyDetails
+    {
+        public int IsShortPolicy { get; set; }
+        public int KycId { get; set; }
+        public int DeptId { get; set; }
+        public string DeptName { get; set; }
+        public int ClassId { get; set; }
+        public string ClassName { get; set; }
+        public int clientBankId { get; set; }
+        public string ClientBankName { get; set; }
+        public int bankBranchId { get; set; }
+        public string bankBranceName { get; set; }
+        public DateTime EffectiveDt { get; set; }
+        public DateTime ExpiryDate { get; set; }
+        public int HASAGENT { get; set; }
+        public string AgentCode { get; set; }
+        public string fieldOfficerCode { get; set; }
+        public int CategoryId { get; set; }
+        public string CareOf { get; set; }
+
+    }
+
+    public class TransactionDetails
+    {
+        public string MERCHANTTRANSNO { get; set; }
+        public int KycId { get; set; }
+        public string GatewayTxnId { get; set; }
+        public string Status { get; set; }
+        public decimal PAIDAMT { get; set; }
+        public int MerchantPaymentId { get; set; }
+        public string MerchantPayment { get; set; }
+        public string PaymentRemarks { get; set; }
+        public int Id { get; set; }
+    }
+    public class ProductAttachment
+    {
+        public string DocumentName { get; set; }
+        public int KycId { get; set; }
+
+        public string DocumentFile { get; set; }
+        public string? DocumentUrl { get; set; }
+        public int MotorId { get; set; }
+        public int Id { get; set; }
+    }
+
+    public class PremiumDetails
+    {
+        public decimal NetPayablePremium { get; set; }
+        public int KycId { get; set; }
+
+        public int StampDuty { get; set; }
+        public int VATRATE { get; set; }
+        public decimal VATAMT { get; set; }
+        public decimal TotalPayablePremium { get; set; }
+        public int MotorId { get; set; }
+    }
+    public class MotorDetails
+    {
+        public int Id { get; set; }
+        public string YEARMANUFACTURE { get; set; }
+        public int KycId { get; set; }
+        public string CCHP { get; set; }
+        public string TYPECOVER { get; set; }
+        public int CATEGORYID { get; set; }
+        public string Category { get; set; }
+        public string VehicleCost { get; set; }
+        public string UtilitiesCost { get; set; }
+        public string EODAMT { get; set; }
+        public int NCDYR { get; set; }
+        public int DEPTID { get; set; }
+        public string DEPT { get; set; }
+        public int INCLUDETOWING { get; set; }
+        public int ISGOVERNMENT { get; set; }
+        public int EXCLUDEPOOL { get; set; }
+        public int BUSSOCCPCODE { get; set; }
+        public string MODEUSE { get; set; }
+        public int ManufactureCompanyId { get; set; }
+        public string ManufactureCompanyName { get; set; }
+        public int HASTRAILOR { get; set; }
+        public int CompanyVehicleModelId { get; set; }
+        public string CompanyVehicleName { get; set; }
+        public int VehicleFormationId { get; set; }
+        public string VehicleFormation { get; set; }
+        public int CARRYCAPACITY { get; set; }
+        public string REGDATE { get; set; }
+        public string VehicleNoNepali { get; set; }
+        public string VehicleNoEnglish { get; set; }
+        public string RunningVehicleNoNepali { get; set; }
+        public string RunningVehicleNoEnglish { get; set; }
+        public string ENGINENO { get; set; }
+        public string CHASISNO { get; set; }
+        public int NoOfEmployee { get; set; }
+        public int NoOfSeat { get; set; }
+        public int TrailorSI { get; set; }
+        public string TrailorSIDesc { get; set; }
+        public int SHOWROOM { get; set; }
+        public List<ProductAttachment> ProductAttachments { get; set; }
+        public string CreatedBy { get; set; }
+        public int ClassId { get; set; }
+
+        public string PolicyStatus { get; set; }
+        public bool IsAllowed { get; set; }
+        public string PolicyMessage { get; set; }
+    }
+    public class SaveMotorProforma
+    {
+        public KycDetail kycDetails { get; set; }
+        public MotorDetails MotorDetails { get; set; }
+        public PremiumDetails PremiumDetails { get; set; }
+        public TransactionDetails TransactionDetails { get; set; }
+        public CommonPolicyDetails CommonPolicyDetails { get; set; }
+    }
+
+    public class ResponseObject1
+    {
+        public string ResponseCode { get; set; }
+        public string ResponseMessage { get; set; }
+        public object TotalRecord { get; set; }
+        public DataObject1 Data { get; set; }
+        public string MerchantTxnId { get; set; }
+    }
+
+    public class DataObject1
+    {
+        public OutputObject1 Output { get; set; }
+        public decimal BasicPremium { get; set; }
+        public decimal PoolPremium { get; set; }
+        public decimal DriverPremium { get; set; }
+        public decimal HelperPremium { get; set; }
+        public decimal PassengerPremium { get; set; }
+        public decimal ThirdPartyPremium { get; set; }
+        public decimal OtherPremium { get; set; }
+        public decimal NetPremium { get; set; }
+        public string Stamp { get; set; }
+        public decimal VatablePremium { get; set; }
+        public decimal VatAmount { get; set; }
+        public decimal TotalPayablePremium { get; set; }
+    }
+    public class OutputObject1
+    {
+        public string Flag { get; set; }
+        public string SuccFailMsg { get; set; }
+        public string ProformaNo { get; set; }
+        public string Insured { get; set; }
+        public string ClassName { get; set; }
+        public string KycNo { get; set; }
+        public string KycId { get; set; }
+        public decimal SumInsured { get; set; }
+        public decimal TpPremium { get; set; }
+        public string DocumentNo { get; set; }
+        public string ReceiptNo { get; set; }
+        public string ReceiptDate { get; set; }
+        public DateTime EffectiveDate { get; set; }
+        public DateTime ExpiryDate { get; set; }
+        public string PolicyNo { get; set; }
+        public string TransactionStatus { get; set; }
+        public string AcceptanceNo { get; set; }
+        public string Name { get; set; }
+        public string Contact { get; set; }
+        public string VehicleNumber { get; set; }
+    }
+
+    public class PreviewPolicyRequest
+    {
+        public string acceptanceNo { get; set; }
+    }
+
+    public class MerchantBalanceResponse
+    {
+        public string ResponseCode { get; set; }
+        public string ResponseMessage { get; set; }
+        public object TotalRecord { get; set; }
+        public BalanceData Data { get; set; }
+    }
+    public class BalanceData
+    {
+        public decimal BalanceAmount { get; set; }
+    }
+
 }

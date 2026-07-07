@@ -65,29 +65,44 @@ namespace HulasApplication
 			{
 				so.IdleTimeout = TimeSpan.FromSeconds(120);
 			});
-			services.AddSwaggerGen(c =>
-			{
-				c.SwaggerDoc("v1",
-					new OpenApiInfo
-					{
-						Title = "API",
-						Version = "v1",
-						Description = "API endpoint "
-					}
-				 );
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1",
+                    new OpenApiInfo
+                    {
+                        Title = "API",
+                        Version = "v1",
+                        Description = "API endpoint"
+                    });
 
-				c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-				{
-					Description = "Standard Authorization header using the Bearer scheme. Example: \"bearer {token}\"",
-					In = ParameterLocation.Header,
-					Name = "Authorization",
-					Type = SecuritySchemeType.ApiKey
-				});
-				c.OperationFilter<SecurityRequirementsOperationFilter>();
-				c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Enter your JWT token"
+                });
 
-			});
-			var jwtIssuer = Configuration.GetSection("Jwt:Issuer").Get<string>();
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+
+                c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+            });
+            var jwtIssuer = Configuration.GetSection("Jwt:Issuer").Get<string>();
 			var jwtKey = Configuration.GetSection("Jwt:Key").Get<string>();
 			services.AddAuthentication(opt =>
 			{

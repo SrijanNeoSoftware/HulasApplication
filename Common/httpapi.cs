@@ -1,12 +1,14 @@
 ﻿using HulasApplication.Model;
+using HulasApplication.Model.Mobile.ResponseModel;
+using HulasApplication.Model.MotorApi;
 using Microsoft.Extensions.Configuration;
-using System.Net.Http.Headers;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using System;
-using Newtonsoft.Json;
-using HulasApplication.Model.MotorApi;
 
 namespace HulasApplication.Common
 {
@@ -15,7 +17,6 @@ namespace HulasApplication.Common
 	public class httpapi
 	{
 		private static IConfiguration config;
-
 
 		public static void Init(IConfiguration _config)
 		{
@@ -165,7 +166,64 @@ namespace HulasApplication.Common
 				return resultContent;
 			}
 		}
-		public static async Task<T> GetVehilceName<T>(string url, int CategoryId, Insurers data)
+
+        public static async Task<MerchantBalanceResponse> GetMerchantBalance(string url, Insurers data, int merchantPaymentId)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(data.url);
+                var token = await GetToken(data);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var result = await client.GetAsync($"{url}?MerchantPaymentId={merchantPaymentId}");
+                result.EnsureSuccessStatusCode();
+                string resultContentString = await result.Content.ReadAsStringAsync();
+                MerchantBalanceResponse resultContent = JsonConvert.DeserializeObject<MerchantBalanceResponse>(resultContentString);
+                return resultContent;
+            }
+        }
+
+        public static async Task<ResponseObject1> PostMotorProforma(string url, Insurers data, SaveMotorProforma model)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(data.url);
+                var token = await GetToken(data);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var jsonRequest = Newtonsoft.Json.JsonConvert.SerializeObject(model);
+                var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+                var result = await client.PostAsync(url, content);
+                Console.WriteLine($"Actual request URI: {result.RequestMessage.RequestUri}");
+                result.EnsureSuccessStatusCode();
+                string resultContentString = await result.Content.ReadAsStringAsync();
+                ResponseObject1 resultContent = JsonConvert.DeserializeObject<ResponseObject1>(resultContentString);
+                return resultContent;
+            }	
+        }
+
+        public static async Task<PreviewResponse> PreviewPolicyAsync(string url, Insurers data, string acceptanceNo)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(data.url);
+                var token = await GetToken(data);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var requestParam = new { acceptanceNo };
+                var jsonRequest = Newtonsoft.Json.JsonConvert.SerializeObject(requestParam);
+                var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+
+                var result = await client.PostAsync(url, content);
+                Console.WriteLine($"Actual request URI: {result.RequestMessage.RequestUri}");
+                result.EnsureSuccessStatusCode();
+
+                string resultContentString = await result.Content.ReadAsStringAsync();
+                Console.WriteLine($"Raw response: {resultContentString}");
+
+                PreviewResponse resultContent = JsonConvert.DeserializeObject<PreviewResponse>(resultContentString);
+                return resultContent;
+            }
+        }
+        public static async Task<T> GetVehilceName<T>(string url, int CategoryId, Insurers data)
 		{
 			using (var client = new HttpClient())
 			{
