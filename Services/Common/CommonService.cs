@@ -57,6 +57,51 @@ namespace HulasApplication.Services.Common
                 return returnId;
             });
         }
+
+        public async Task<int> InsertTransactionDetails(TransactionDetails transactionDetails)
+        {
+            var insertQuery = @"INSERT INTO [dbo].[HulasTransactionDetails]
+    
+                (
+                    [MERCHANTTRANSNO],
+                    [KycId],
+                    [PAIDAMT],
+                    [MerchantPaymentId],
+                    [MerchantPayment],
+                    [PaymentRemarks],
+                    [GatewayTxnId],
+                    [Status]
+                )
+                OUTPUT INSERTED.Id
+                VALUES
+                (
+                    @MERCHANTTRANSNO,
+                    @KycId,
+                    @PAIDAMT,
+                    @MerchantPaymentId,
+                    @MerchantPayment,
+                    @PaymentRemarks,
+                    @GatewayTxnId,
+                    @Status
+                )";
+
+            return await WithConnection(async conn =>
+            {
+                var returnId = await conn.QuerySingleOrDefaultAsync<int>(insertQuery, new
+                {
+                    transactionDetails.MERCHANTTRANSNO,
+                    transactionDetails.KycId,
+                    transactionDetails.PAIDAMT,
+                    transactionDetails.MerchantPaymentId,
+                    transactionDetails.MerchantPayment,
+                    transactionDetails.PaymentRemarks,
+                    transactionDetails.GatewayTxnId,
+                    transactionDetails.Status
+                });
+
+                return returnId;
+            });
+        }
         public async Task<int> InsertKYCDetails(KycDetail kycDetails)
         {
             var insertQuery = $@"INSERT INTO [dbo].[HulasKYCDetails]
@@ -219,7 +264,7 @@ namespace HulasApplication.Services.Common
         public async Task<int> InsertMotorProforma(OutputObject1 apiResponse, SaveMotorProforma model,int kycDetailsId)
         {
             var insertQuery = @"
-            INSERT INTO [dbo].[MotorProformaSuccess]
+            INSERT INTO [dbo].[HulasMotorProformaSuccess]
             (
                 [Flag], [SuccFailMsg], [ProformaNo], [Insured], [ClassName], [KycNo], [KycId],[KycDetailsId],
                 [SumInsured], [TpPremium], [DocumentNo], [ReceiptNo], [ReceiptDate], [EffectiveDate], [ExpiryDate],
@@ -268,11 +313,11 @@ namespace HulasApplication.Services.Common
             });
         }
 
-        public async Task<int> InsertFailedMotorProforma(SaveMotorProforma model, string failureReason)
+        public async Task<int> InsertFailedMotorProforma(SaveMotorProforma model, string failureReason, int kycDetailsId)
 
         {
             var insertQuery = @"
-            INSERT INTO dbo.MotorProformaFailed
+            INSERT INTO dbo.HulasMotorProformaFailed
             (
                 Name,
                 CurrentAddress,
@@ -291,7 +336,8 @@ namespace HulasApplication.Services.Common
                 TotalPremium,
                 FailureReason,
                 CreatedDate,
-                CareOf
+                CareOf,
+                KycDetailsId
             )
                 OUTPUT Inserted.Id
                 VALUES
@@ -313,7 +359,8 @@ namespace HulasApplication.Services.Common
                 @TotalPremium,
                 @FailureReason,
                 GETDATE(),
-                @CareOf
+                @CareOf,
+                @KycDetailsId
                 )";
 
             return await WithConnection(async conn =>
@@ -343,7 +390,8 @@ namespace HulasApplication.Services.Common
                         TotalPremium = model.PremiumDetails?.TotalPayablePremium,
 
                         FailureReason = failureReason,
-                        CareOf = model.CommonPolicyDetails.CareOf
+                        CareOf = model.CommonPolicyDetails.CareOf,
+                        KycDetailsId = kycDetailsId
                     });
             });
         }

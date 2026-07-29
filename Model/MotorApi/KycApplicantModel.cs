@@ -896,6 +896,25 @@ namespace HulasApplication.Model.MotorApi
         public object TotalRecord { get; set; }
         public BalanceData Data { get; set; }
     }
+
+    public class GetMerchantPaymentSourceRequest
+    {
+        public int MerchantId { get; set; }
+    }
+
+    public class GetMerchantPaymentSourceResponse
+    {
+        public string responseCode { get; set; }
+        public string responseMessage { get; set; }
+        public int? totalRecord { get; set; }
+        public List<MerchantPaymentSourceData> data { get; set; }
+    }
+
+    public class MerchantPaymentSourceData
+    {
+        public int id { get; set; }
+        public string paymentSource { get; set; }
+    }
     public class BalanceData
     {
         public decimal BalanceAmount { get; set; }

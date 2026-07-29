@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 
+
 namespace HulasApplication.Controllers.Api
 {
 	public class HulasController : ControllerBase
@@ -26,11 +27,12 @@ namespace HulasApplication.Controllers.Api
 		private static IConfiguration _config;
 
 
-		public HulasController(ICommonService commonService, IConfiguration config)
+		public HulasController(ICommonService commonService, IConfiguration config,ILogger<HulasController> logger)
 		{
 			_commonService = commonService;
 			_config = config;
 			_ConnectionString = _config.GetConnectionString("NeoInsuranceWebContextConnection");
+			_logger = logger;
 
 		}
 
@@ -345,9 +347,11 @@ namespace HulasApplication.Controllers.Api
         [Route("PostMotor")]
         public async Task<IActionResult> PostMotor([FromBody] SaveMotorProforma model)
         {
+			int kycDetailsId = 0;
             try
             {
-                var kycDetailsId = await _commonService.InsertKYCDetails(model.kycDetails);
+                kycDetailsId = await _commonService.InsertKYCDetails(model.kycDetails);
+                var merchantID = $"{_config["NLGApiURL:MerchantId"]}";
 
                 model.MotorDetails.KycId = kycDetailsId;
                 model.PremiumDetails.KycId = kycDetailsId;
@@ -373,8 +377,16 @@ namespace HulasApplication.Controllers.Api
                 await _commonService.InsertMotorDetails(model.MotorDetails);
                 await _commonService.InsertPremiumDetail(model.PremiumDetails);
 
+				model.TransactionDetails.MERCHANTTRANSNO = $"{merchantID}-{kycDetailsId}";
+				model.TransactionDetails.KycId = kycDetailsId;
+
+
+                //await _commonService.InsertTransactionDetails(model.TransactionDetails);
+
                 if (model.MotorDetails.ProductAttachments?.Any() == true)
                     await _commonService.InsertProductAttachment(model.MotorDetails.ProductAttachments);
+
+                await _commonService.InsertTransactionDetails(model.TransactionDetails);
 
                 var insurerId = 2;
                 var insurer = await _commonService.GetInsurers(insurerId);
@@ -386,6 +398,8 @@ namespace HulasApplication.Controllers.Api
 
                 if (response?.Data?.Output?.Flag?.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase) == true)
                 {
+                    response.MerchantTxnId = $"{merchantID}-{kycDetailsId}";
+
                     await _commonService.InsertMotorProforma(
                         response.Data.Output,
                         model,
@@ -395,7 +409,8 @@ namespace HulasApplication.Controllers.Api
                 {
                     await _commonService.InsertFailedMotorProforma(
                         model,
-                        response?.Data?.Output?.SuccFailMsg ?? "Unknown error from insurer API");
+                        response?.Data?.Output?.SuccFailMsg ?? "Unknown error from insurer API",
+						kycDetailsId);
                 }
 
                 return Ok(response);
@@ -404,7 +419,8 @@ namespace HulasApplication.Controllers.Api
             {
                 await _commonService.InsertFailedMotorProforma(
                     model,
-                    ex.Message);
+                    ex.Message,
+                    kycDetailsId);
 
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
@@ -430,6 +446,59 @@ namespace HulasApplication.Controllers.Api
             catch (Exception ex)
             {
                 return Ok(new { success = 0, message = ex.Message });
+            }
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Route("getMerchantPaymentSource")]
+        public async Task<IActionResult> GetMerchantPaymentSource([FromBody] GetMerchantPaymentSourceRequest model)
+        {
+            try
+            {
+                var insurerId = 2;
+                var data = await _commonService.GetInsurers(insurerId);
+                var result = await httpapi.GetMerchantPaymentSource("/API/Utility/GetMerchantPaymentSource", data, model.MerchantId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = 0, message = ex.Message });
+            }
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Route("getPaymentInstrumentDetails")]
+        public async Task<IActionResult> GetPaymentInstrumentDetails()
+        {
+            try
+            {
+                var result = await httpapi.GetPaymentInstrumentDetails();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = 0, message = ex.Message });
+            }
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Route("getProcessId")]
+        public async Task<IActionResult> GetProcess([FromBody] ProcessModel model)
+        {
+            try
+            {
+                var data = await httpapi.GetProcess(model);
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return Ok(new { success = 0, message = "An unexpected error occurred. Please try again later." });
             }
         }
         public class TokenRequestModel
